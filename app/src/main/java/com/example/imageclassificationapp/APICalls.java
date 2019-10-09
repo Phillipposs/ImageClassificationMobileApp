@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import com.example.imageclassificationapp.model.User;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import okhttp3.MediaType;
@@ -40,6 +42,33 @@ public class APICalls {
             Call call = retrofitCalls.sendImageForClassification(part, userNameBody);
             call.enqueue(callback);
         }
+    public static void sendImagesForClassification(List<String> filePaths, Context context, Callback<String> callback ) {
+        Retrofit retrofit = NetworkClient.getRetrofitClient();
+        RetrofitCalls retrofitCalls = retrofit.create(RetrofitCalls.class);
+        //Create a file object using file path
+        List<MultipartBody.Part>files = new ArrayList<>();
+        for (String filePath:filePaths
+             ) {
+            File file = new File(filePath);
+            // Create a request body with file and image media type
+            RequestBody fileReqBody = RequestBody.create(MediaType.parse("image/*"), file);
+            // Create MultipartBody.Part using file request-body,file name and part name
+
+            MultipartBody.Part part = MultipartBody.Part.createFormData("file", file.getName(), fileReqBody);
+            files.add(part);
+            //Create request body with text description and text media type
+
+        }
+        SharedPreferences mPrefs = context.getSharedPreferences("_", MODE_PRIVATE); //add key
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+
+        String userName = mPrefs.getString("userName", null);
+        RequestBody userNameBody = RequestBody.create(MediaType.parse("text/plain"), userName);
+
+        //
+        Call call = retrofitCalls.sendImagesForClassification(files, userNameBody);
+        call.enqueue(callback);
+    }
 
     public static void getResult(Context context,Callback<String> callback ) {
         Retrofit retrofit = NetworkClient.getRetrofitClient();

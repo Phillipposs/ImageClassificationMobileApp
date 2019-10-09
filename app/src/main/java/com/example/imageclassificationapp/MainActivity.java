@@ -5,6 +5,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -22,6 +23,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.imageclassificationapp.model.Photo;
 import com.google.android.gms.common.api.Api;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -37,6 +39,8 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
@@ -49,6 +53,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
+    private static final int PICK_IMAGE_MULTIPLE = 99;
     @BindView(R.id.uploadButton)
     Button uploadButton;
     private int column_index;
@@ -56,28 +61,34 @@ public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_PERMISSION_MULTIPLE = 0;
     public static final int REQUEST_WRITE_EXTERNAL = 3;
     public static final int REQUEST_READ_EXTERNAL = 4;
-    @BindView(R.id.highestScoreValue)
-    TextView highestScore;
-    @BindView(R.id.secondHighestValue)
-    TextView secondHighestScore;
-    @BindView(R.id.thirdHighestValue)
-    TextView thirdHighestScore;
+
+    RecyclerView recyclerView;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
+    String imageEncoded;
+    List<String> imagesEncodedList;
     private ViewModel viewModel;
     private String TAG = "Main Activity";
     String token;
+    List<Photo> photos = new ArrayList<>();
+    ResultAdapter resultAdapter ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         checkAndRequestPermissions(this);
-        viewModel = ViewModel.getInstance();
-        BackgroundUpdatesRunningReceiver backgroundUpdatesRunningReceiver = new BackgroundUpdatesRunningReceiver();
-        IntentFilter filter = new IntentFilter(BroadcastConst.RECEIVED_PUSH_NOTIFICATION/*BackgroundUpdateService.class.getName()*/);
-        filter.addCategory(Intent.CATEGORY_DEFAULT);
-        getApplicationContext().registerReceiver(backgroundUpdatesRunningReceiver, filter);
-        Log.d("Firebase", "token "+ FirebaseInstanceId.getInstance().getToken());
         setContentView(R.layout.activity_main);
+        viewModel = ViewModel.getInstance();
+        recyclerView =findViewById(R.id.recyclerView);
+        resultAdapter = new ResultAdapter(getApplicationContext());
+        resultAdapter.setItems(photos);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        recyclerView.setAdapter(resultAdapter);
+   /*     BackgroundUpdatesRunningReceiver backgroundUpdatesRunningReceiver = new BackgroundUpdatesRunningReceiver();
+        IntentFilter filter = new IntentFilter(BroadcastConst.RECEIVED_PUSH_NOTIFICATION*//*BackgroundUpdateService.class.getName()*//*);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        getApplicationContext().registerReceiver(backgroundUpdatesRunningReceiver, filter);*/
+        Log.d("Firebase", "token "+ FirebaseInstanceId.getInstance().getToken());
+
         ViewModelProviders.of(this).get(ViewModel.class);
         ButterKnife.bind(this, getWindow().getDecorView());
         observePredictions();
@@ -98,14 +109,34 @@ public class MainActivity extends AppCompatActivity {
                                 public void onResponse(Call<String> call, Response<String> response) {
 
                                     if(response.body() != null){
-                                        String[] ary = response.body().split(",");
-                                        progressBar.setVisibility(View.INVISIBLE);
-                                        if(ary.length>0){
-                                            highestScore.setText(ary[0]);
+                                        String[] results =  response.body().split("`");
+                                        for(int i=0;i<results.length;i++){
+                                            String[] ary = results[i].split(",");
+                                            for(int j =0; j < ary.length;j++){
+                                               // ary[j]=ary[j].trim();
+                                                ary[j]=ary[j].replace("[","");
+                                                ary[j]=ary[j].replace("]","");
+                                            }
+                                            if(ary.length>2){
+                                                progressBar.setVisibility(View.INVISIBLE);
+                                                Photo photo = new Photo();
+                                                SharedPreferences mPrefs = getApplicationContext().getSharedPreferences("_", MODE_PRIVATE);
+                                                String userName = mPrefs.getString("userName", null);
+                                                photo.highestScore=ary[0];
+                                                photo.secondHighestScore=ary[1];
+                                                photo.thirdHighestScore=ary[2];
+                                                photo.photoName=ary[3];
+                                                photo.userName=userName;
+                                                photos.add(photo);
+                                                resultAdapter.addItem(photo);
+                                                resultAdapter.notifyDataSetChanged();
+                                        }
+
+/*                                            highestScore.setText(ary[0]);
                                             if(ary.length>1)
                                             secondHighestScore.setText(ary[1]);
                                             if(ary.length>2)
-                                            thirdHighestScore.setText(ary[2]);
+                                            thirdHighestScore.setText(ary[2]);*/
                                         }
 
                                     }
@@ -126,8 +157,14 @@ public class MainActivity extends AppCompatActivity {
                     }});
                 t1.start();
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 photoPickerIntent.setType("image/*");
                 startActivityForResult(photoPickerIntent, 1);
+/*                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent,"Select Picture"), PICK_IMAGE_MULTIPLE );*/
             }
         });
     }
@@ -163,7 +200,74 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
     }
+   /*@Override
+   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+       try {
+           // When an Image is picked
+           if (requestCode == PICK_IMAGE_MULTIPLE && resultCode == RESULT_OK
+                   && null != data) {
+               // Get the Image from data
 
+               String[] filePathColumn = { MediaStore.Images.Media.DATA };
+               imagesEncodedList = new ArrayList<String>();
+               if(data.getData()!=null){
+
+                   Uri mImageUri=data.getData();
+                   String filePath = getPath(mImageUri);
+                   // Get the cursor
+                   Cursor cursor = getContentResolver().query(mImageUri,
+                           filePathColumn, null, null, null);
+                   // Move to first row
+                   cursor.moveToFirst();
+
+                   int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                   imageEncoded  = cursor.getString(columnIndex);
+                   cursor.close();
+
+               } else {
+                   if (data.getClipData() != null) {
+                       ClipData mClipData = data.getClipData();
+                       ArrayList<Uri> mArrayUri = new ArrayList<Uri>();
+                       for (int i = 0; i < mClipData.getItemCount(); i++) {
+
+                           ClipData.Item item = mClipData.getItemAt(i);
+                           Uri uri = item.getUri();
+                           mArrayUri.add(uri);
+                           // Get the cursor
+                           Cursor cursor = getContentResolver().query(uri, filePathColumn, null, null, null);
+                           // Move to first row
+                           cursor.moveToFirst();
+                           String filePath = getPath(uri);
+                           int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                           imageEncoded  = cursor.getString(columnIndex);
+                           imagesEncodedList.add(filePath);
+                           cursor.close();
+                           APICalls.sendImagesForClassification(imagesEncodedList, getApplicationContext(), new Callback<String>() {
+                               @Override
+                               public void onResponse(Call<String> call, Response<String> response) {
+                                   int x =0;
+                               }
+
+                               @Override
+                               public void onFailure(Call<String> call, Throwable t) {
+                                   t.printStackTrace();
+                               }
+                           });
+                       }
+                       Log.v("LOG_TAG", "Selected Images" + mArrayUri.size());
+                   }
+               }
+           } else {
+               Toast.makeText(this, "You haven't picked Image",
+                       Toast.LENGTH_LONG).show();
+           }
+       } catch (Exception e) {
+           Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG)
+                   .show();
+       }
+
+       super.onActivityResult(requestCode, resultCode, data);
+   }*/
     public String getPath(Uri uri) {
         String[] projection = {MediaStore.MediaColumns.DATA};
         Cursor cursor = managedQuery(uri, projection, null, null, null);
@@ -319,9 +423,9 @@ public class MainActivity extends AppCompatActivity {
            @Override
            public void onChanged(String[] strings) {
                 progressBar.setVisibility(View.INVISIBLE);
-                highestScore.setText(strings[0]);
+      /*          highestScore.setText(strings[0]);
                 secondHighestScore.setText(strings[1]);
-                thirdHighestScore.setText(strings[2]);
+                thirdHighestScore.setText(strings[2]);*/
            }
        });
 

@@ -1,19 +1,7 @@
 package com.example.imageclassificationapp.firebase;
-
-
 import android.util.Log;
-import android.view.View;
-
-import com.example.imageclassificationapp.APICalls;
-import com.example.imageclassificationapp.ApiResponseHandler;
-import com.example.imageclassificationapp.BroadcastHelper;
-import com.example.imageclassificationapp.ViewModel;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "FirebaseService";

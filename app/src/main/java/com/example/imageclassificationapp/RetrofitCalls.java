@@ -1,6 +1,8 @@
 package com.example.imageclassificationapp;
 import com.example.imageclassificationapp.model.User;
 
+import java.util.List;
+
 import io.reactivex.Observable;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -16,6 +18,10 @@ public interface RetrofitCalls {
     @Multipart
     @POST(Urls.sendImageForClassification)
     Call<String> sendImageForClassification(@Part MultipartBody.Part file, @Part("userName") RequestBody requestBody);
+
+    @Multipart
+    @POST(Urls.sendImagesForClassification)
+    Call<String> sendImagesForClassification(@Part List<MultipartBody.Part> files, @Part("userName") RequestBody requestBody);
 
     @GET(Urls.getResult)
     Call<String> getImageClassificationPrediction(String token);
