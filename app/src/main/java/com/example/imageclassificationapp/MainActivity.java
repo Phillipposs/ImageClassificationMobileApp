@@ -132,11 +132,6 @@ public class MainActivity extends AppCompatActivity {
                                                 resultAdapter.notifyDataSetChanged();
                                         }
 
-/*                                            highestScore.setText(ary[0]);
-                                            if(ary.length>1)
-                                            secondHighestScore.setText(ary[1]);
-                                            if(ary.length>2)
-                                            thirdHighestScore.setText(ary[2]);*/
                                         }
 
                                     }
@@ -200,74 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
     }
-   /*@Override
-   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-       try {
-           // When an Image is picked
-           if (requestCode == PICK_IMAGE_MULTIPLE && resultCode == RESULT_OK
-                   && null != data) {
-               // Get the Image from data
-
-               String[] filePathColumn = { MediaStore.Images.Media.DATA };
-               imagesEncodedList = new ArrayList<String>();
-               if(data.getData()!=null){
-
-                   Uri mImageUri=data.getData();
-                   String filePath = getPath(mImageUri);
-                   // Get the cursor
-                   Cursor cursor = getContentResolver().query(mImageUri,
-                           filePathColumn, null, null, null);
-                   // Move to first row
-                   cursor.moveToFirst();
-
-                   int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                   imageEncoded  = cursor.getString(columnIndex);
-                   cursor.close();
-
-               } else {
-                   if (data.getClipData() != null) {
-                       ClipData mClipData = data.getClipData();
-                       ArrayList<Uri> mArrayUri = new ArrayList<Uri>();
-                       for (int i = 0; i < mClipData.getItemCount(); i++) {
-
-                           ClipData.Item item = mClipData.getItemAt(i);
-                           Uri uri = item.getUri();
-                           mArrayUri.add(uri);
-                           // Get the cursor
-                           Cursor cursor = getContentResolver().query(uri, filePathColumn, null, null, null);
-                           // Move to first row
-                           cursor.moveToFirst();
-                           String filePath = getPath(uri);
-                           int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                           imageEncoded  = cursor.getString(columnIndex);
-                           imagesEncodedList.add(filePath);
-                           cursor.close();
-                           APICalls.sendImagesForClassification(imagesEncodedList, getApplicationContext(), new Callback<String>() {
-                               @Override
-                               public void onResponse(Call<String> call, Response<String> response) {
-                                   int x =0;
-                               }
-
-                               @Override
-                               public void onFailure(Call<String> call, Throwable t) {
-                                   t.printStackTrace();
-                               }
-                           });
-                       }
-                       Log.v("LOG_TAG", "Selected Images" + mArrayUri.size());
-                   }
-               }
-           } else {
-               Toast.makeText(this, "You haven't picked Image",
-                       Toast.LENGTH_LONG).show();
-           }
-       } catch (Exception e) {
-           Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG)
-                   .show();
-       }
-
-       super.onActivityResult(requestCode, resultCode, data);
-   }*/
+  
     public String getPath(Uri uri) {
         String[] projection = {MediaStore.MediaColumns.DATA};
         Cursor cursor = managedQuery(uri, projection, null, null, null);
@@ -434,99 +362,7 @@ public class MainActivity extends AppCompatActivity {
     public class BackgroundUpdatesRunningReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-   /*         if (intent.getAction().equals(BroadcastConst.RECEIVED_PUSH_NOTIFICATION)) {
-                if (intent.hasExtra(BroadcastConst.firebaseData)) {
-                  String  predictionsArray = intent.getStringExtra(BroadcastConst.firebaseData);
-                    String[] ary = predictionsArray.split(",");
-                    for(int i =0; i < ary.length;i++){
-                        ary[i]=ary[i].trim();
-                        ary[i]=ary[i].replace("[","");
-                        ary[i]=ary[i].replace("]","");
-                    }
-                    progressBar.setVisibility(View.INVISIBLE);
-                    highestScore.setText(ary[0]);
-                    secondHighestScore.setText(ary[1]);
-                    thirdHighestScore.setText(ary[2]);
-                }
 
-            }*/
         }
     }
-
-/*    public boolean checkPermissions() {
-        List<String> permissionsNeeded = new ArrayList<>();
-
-        final List<String> permissionsList = new ArrayList<String>();
-        if (!addPermission(permissionsList, Manifest.permission.WRITE_EXTERNAL_STORAGE))
-            permissionsNeeded.add("WRITE_EXTERNAL_STORAGE added");
-        if (!addPermission(permissionsList, android.Manifest.permission.READ_EXTERNAL_STORAGE))
-            permissionsNeeded.add("READ_EXTERNAL_STORAGE added");
-        if (permissionsList.size() > 0) {
-            if (permissionsNeeded.size() > 0) {
-                // Need Rationale
-                String message = "You need to grant access to " + permissionsNeeded.get(0);
-                for (int i = 1; i < permissionsNeeded.size(); i++)
-                    message = String.format("%s, %s", message, permissionsNeeded.get(i));
-                showMessageOKCancel(message,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                ActivityCompat.requestPermissions(MainActivity.this, permissionsList.toArray(new String[0]),
-                                        REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS);
-                            }
-                        });
-                return false;
-            }
-            ActivityCompat.requestPermissions(this, permissionsList.toArray(new String[permissionsList.size()]),
-                    REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS);
-            return false;
-        }
-
-        //readContacts();
-        return true;
-
-        //insertDummyContact();
-    }
-    private boolean addPermission(List<String> permissionsList, String permission) {
-        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-            permissionsList.add(permission);
-            // Check for Rationale Option
-            *//*if (!ContextCompat.shouldShowRequestPermissionRationale(permission))
-                return false;*//*
-        }
-        return true;
-    }
-    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
-        new AlertDialog.Builder(this)
-                .setMessage(message)
-                .setPositiveButton("OK", okListener)
-                .setNegativeButton("Cancel", null)
-                .create()
-                .show();
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS: {
-                Map<String, Integer> perms = new HashMap<String, Integer>();
-                // Initial
-                perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
-                perms.put(Manifest.permission.READ_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
-                // Fill with results
-                for (int i = 0; i < permissions.length; i++)
-                    perms.put(permissions[i], grantResults[i]);
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-                    alertDialogBuilder.setMessage("Please allow all permission");
-                    alertDialogBuilder.setPositiveButton("Yes",
-                            (arg0, arg1) -> checkPermissions());
-                    alertDialogBuilder.setNegativeButton("No", (dialog, which) -> finish());
-                    AlertDialog alertDialog = alertDialogBuilder.create();
-                    alertDialog.show();
-            }
-            break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-
-    }*/
 }
